@@ -177,6 +177,18 @@ class HealthDataOperations {
             }
         }
 
+        // Blood pressure in iOS HealthKit is an HKCorrelationType, not individual quantity types.
+        // Requesting only BLOOD_PRESSURE_SYSTOLIC / BLOOD_PRESSURE_DIASTOLIC results in the
+        // "Blood Pressure" row appearing as OFF/greyed-out in the authorization sheet because
+        // iOS treats those as sub-components of the un-requested correlation type.
+        // Including the correlation type here mirrors how NUTRITION handles HKCorrelationType.food
+        // and ensures "Blood Pressure" appears as a proper, toggled-ON entry in the prompt.
+        let bloodPressureKeys = [HealthConstants.BLOOD_PRESSURE_SYSTOLIC, HealthConstants.BLOOD_PRESSURE_DIASTOLIC]
+        if types.contains(where: { bloodPressureKeys.contains($0) }),
+           let bpCorrelation = HKCorrelationType.correlationType(forIdentifier: .bloodPressure) {
+            typesToRead.insert(bpCorrelation)
+        }
+
         healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead) {
             success, _ in
             DispatchQueue.main.async {
