@@ -155,6 +155,28 @@ class HealthDataOperations {
                     }
                 }
 
+                // Blood pressure quantity types are part of an HKCorrelation on iOS.
+                // The permission dialog only shows "Blood Pressure" when the correlation
+                // type is included in the request — the individual quantity types alone
+                // cause the entry to be missing or toggled off.
+                let bloodPressureKeys: Set<String> = [
+                    HealthConstants.BLOOD_PRESSURE_DIASTOLIC,
+                    HealthConstants.BLOOD_PRESSURE_SYSTOLIC,
+                ]
+                if bloodPressureKeys.contains(key),
+                   let bpCorrelationType = HKCorrelationType.correlationType(forIdentifier: .bloodPressure)
+                {
+                    switch access {
+                    case 0:
+                        typesToRead.insert(bpCorrelationType)
+                    case 1:
+                        typesToWrite.insert(bpCorrelationType)
+                    default:
+                        typesToRead.insert(bpCorrelationType)
+                        typesToWrite.insert(bpCorrelationType)
+                    }
+                }
+
                 if let characteristicsType = characteristicsTypesDict[key] {
                     switch access {
                     case 0:
